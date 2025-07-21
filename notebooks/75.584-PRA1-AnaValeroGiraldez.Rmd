@@ -1,0 +1,1124 @@
+---
+title: 'Minería de datos: PRA1 - Selección y preparación de un juego de datos'
+author: "Autor: Ana Valero Giraldez"
+date: "Abril 2025"
+output:
+  html_document:
+    highlight: default
+    number_sections: yes
+    theme: cosmo
+    toc: yes
+    toc_depth: 4
+    includes:
+      in_header: 75.584-PEC-header.html
+  word_document: default
+  pdf_document:
+    highlight: zenburn
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+******
+# Enunciado
+******
+Todo estudio analítico debe nacer de una necesidad por parte del **negocio** o de una voluntad de dotarle de un conocimiento contenido en los datos y que solo podremos obtener a través de una colección de buenas prácticas basadas en la Minería de Datos.  
+
+El mundo de la analítica de datos se sustenta en 3 ejes:  
+
+A. Uno de ellos es el profundo **conocimiento** que deberíamos tener **del negocio** al que tratamos de dar respuestas mediante los estudios analíticos.  
+
+B. El otro gran eje es sin duda las **capacidades analíticas** que seamos capaces de desplegar y en este sentido, las dos prácticas de esta asignatura pretenden que el estudiante realice un recorrido sólido por este segundo eje.  
+
+C. El tercer eje son los **datos**. Las necesidades del Negocio deben concretarse con preguntas analíticas que a su vez sean viables responder a partir de los datos de que disponemos. La tarea de analizar los datos es sin duda importante, pero la tarea de identificarlos y obtenerlos va a ser para un analista un reto permanente.  
+
+Como **primera parte** del estudio analítico que nos disponemos a realizar, se pide al estudiante que complete los siguientes pasos:   
+
+
+1. Plantear un problema de analítica de datos detallando los objetivos analíticos y explica una metodología para resolverlos de acuerdo con lo que se ha practicado en las PEC y lo que se ha aprendido en el material didáctico.
+
+2. Seleccionar un juego de datos y justificar su elección. El juego de datos **deberá tener capacidades** para que se le puedan aplicar **algoritmos supervisados** y **algoritmos no supervisados** en la PRA2 y deberá estar alineado con el problema analítico planteado en el paso anterior.
+
+* **Requisitos mínimos del conjunto de datos**:
+  + Debe ser distinto de cualquier dataset usado en las PEC anteriores.
+  + No utilizar el conjunto de datos llamado [German Credit Risk](https://www.kaggle.com/datasets/uciml/german-credit), ya que lo utilizaremos en la PEC3.
+  + Debe contener al menos: 500 observaciones, 5 variables numéricas, 2 variables categóricas y 1 variable binaria. Se entiende que encontrar un dataset que cumpla exactamente con todos los criterios puede ser un reto. Por ello, si un dataset es interesante y adecuado para el análisis, pero no cumple algún criterio puntual, se puede utilizar justificando su elección.
+
+
+Adjuntamos aquí una lista de portales de datos abiertos para seleccionar el juego de datos. Se pueden usar otras fuentes para obtener vuestro juego de datos, pero recordad de citarlas:
+
+* **Datos abiertos**
+  + [Datos abiertos España](https://datos.gob.es/es/catalogo?q=&frequency=%7B"type"%3A+"months"%2C+"value"%3A+"1"%7D&sort=score+desc%2C+metadata_modified+desc)
+  + [Datos abiertos Madrid](https://datos.madrid.es/portal/site/egob/)
+  + [Datos abiertos Barcelona](https://opendata-ajuntament.barcelona.cat/es/)
+  + [Datos abiertos Londres](https://data.london.gov.uk/)
+  + [Datos abiertos New York](https://opendata.cityofnewyork.us/)
+  
+* **Conjuntos de datos para aprendizaje automático e investigación**
+  + [UCI Machine Learning](https://archive.ics.uci.edu/datasets?orderBy=DateDonated&sort=desc)
+  + [Datasets for machine-learning research (Wikipedia)](https://en.wikipedia.org/wiki/List_of_datasets_for_machine-learning_research)
+  + [Kaggle datasets](https://www.kaggle.com/datasets)
+
+
+
+3. Realizar un análisis exploratorio del juego de datos seleccionado.   
+
+4. Realizar tareas de limpieza y acondicionado para poder ser usado en procesos de modelado.
+
+5. Realizar métodos de discretización
+
+6. Aplicar un estudio PCA sobre el juego de datos. A pesar de no estar explicado en el material didáctico, se valorará si en lugar de PCA investigáis por vuestra cuenta y aplicáis SVD (Single Value Decomposition).
+* **Algunos recursos**
+  * [PCA para reducción de dimensiones](https://www.aprendemachinelearning.com/comprende-principal-component-analysis/)
+  * [SVD Singular Value Decomposition](https://math.mit.edu/classes/18.095/2016IAP/lec2/SVD_Notes.pdf)
+
+Recordad que para todas las PRA es **necesario documentar** en cada apartado del ejercicio práctico que se ha hecho, por qué se ha hecho y cómo se ha hecho. Asimismo, todas las decisiones y conclusiones deberán ser presentados de forma razonada y clara, **contextualizando los resultados**, es decir, especificando todos y cada uno de los pasos que se hayan llevado a cabo para su resolución. Por último, incluid una **conclusión final** resumiendo los resultados obtenidos en la práctica e indicad eventuales **citaciones bibliográficas**, fuentes internas/externas y materiales de investigación.
+
+<!-- * **Documento entregable** -->
+
+<!-- Se deben entregar tanto el fichero RMD como el fichero HTML resultante de ejecutar el documento R/Python con Rmarkdown mediante el comando Knit. -->
+<!-- Hay que hacerlo con el siguiente nombre 75.584-PRA1-NombreEstudiante.html -->
+
+******
+# Recursos de programación
+******
+* Incluimos en este apartado una lista de recursos de programación para minería de datos donde podréis encontrar ejemplos, ideas e inspiración:
+  + [Material adicional del libro: Minería de datos Modelos y Algoritmos](https://discovery.biblioteca.uoc.edu/discovery/fulldisplay?docid=alma991000548909706712&context=L&vid=34CSUC_UOC:VU1&lang=ca&search_scope=MyInst_and_CI&adaptor=Local%20Search%20Engine&tab=Everything&query=any,contains,Minería%20de%20datos%20Modelos%20y%20Algoritmos)
+  + [Espacio de recursos UOC para ciencia de datos](http://datascience.recursos.uoc.edu/es/)
+  + [Buscador de código R](https://rseek.org/)  
+  + [Colección de cheatsheets en R](https://www.rstudio.com/resources/cheatsheets/)  
+  
+
+******
+
+****
+# Presentación del caso
+****
+
+**Análisis de depresión en mujeres estudiantes en India**
+
+Aprovechando el conocimiento en el ámbito de la minería de datos, analizaremos un conjunto de datos centrados en la investigación de la depresión estudiantil, una problemática que involucra disciplinas como la psicología, la ciencia de datos y la educación. Este análisis no solo busca identificar los factores que contribuyen a la aparición de síntomas depresivos entre las estudiantes, además de establecer patrones que permitan una intervención temprana.
+
+La propuesta se fundamenta en clasificar los datos recogidos según distintas tipologías académicas y analizar factores externos como el nivel educativo o rendimiento académico, con el fin de detectar qué colectivos femeninos presentan una mayor vulnerabilidad a sufrir trastornos depresivos.
+
+Se ha seleccionado India debido a que ofrece una de las mayores poblaciones estudiantiles a nivel mundial y presenta un contexto sociocultural en el que, a pesar de los avances en igualdad educativa, persisten barreras de género que pueden influir en la salud mental de las estudiantes. Además, el dataset proporciona una base generalmente sólida para analizar estos factores.
+
+El objetivo, mirando más allá, es identificar de forma precisa qué minorías o subgrupos entre las mujeres estudiantes tienen un mayor riesgo de padecer depresión. Esta información resulta clave para diseñar estrategias de intervención temprana adaptadas a las necesidades de cada perfil, lo que podría marcar una diferencia significativa en la prevención y el tratamiento.
+
+En definitiva, proponemos un enfoque que combina el análisis técnico de datos con una perspectiva humana y social, con el fin de contribuir al bienestar emocional y académico de las estudiantes.
+
+****
+# Establecer un objetivo analítico
+****
+El primer paso es establecer el objetivo analítico, es decir, redactar la pregunta o plantear el problema que trataremos de resolver. También deberemos fijar qué medidas vamos a usar para medir el grado de cumplimiento del objetivo planteado. Las siguientes preguntas ayudarán a esta tarea.
+
+**¿Has especificado la tipología de pregunta analítica a la que te enfrentas (por ejemplo, clasificación, segmentación, asociación, regresión...) antes de empezar a trabajar con los datos?**
+
+Sí, se ha identificado claramente la naturaleza del problema como un caso de **clasificación**. El objetivo es clasificar a las estudiantes según su riesgo de padecer depresión, utilizando variables relacionadas con su tipología académica y otros factores personales o contextuales presentes en el conjunto de datos. 
+
+**¿Has establecido cómo vas a medir el grado de cumplimiento de tu objetivo analítico?**
+
+Dado que el problema planteado corresponde a un caso de clasificación, nuestro objetivo es asignar a cada estudiante a una categoría en función de su riesgo de padecer depresión. No buscamos predecir valores numéricos (regresión) ni descubrir grupos ocultos (segmentación), sino clasificar de manera precisa. Para evaluar el desempeño del modelo, utilizaremos la precisión (accuracy) como medida principal, entendida como el porcentaje de estudiantes correctamente clasificados.
+
+**¿Has entendido bien el contexto del objetivo planteado y sus posibles aplicaciones?**
+Sí, el objetivo final de este análisis es contribuir a la detección temprana de depresión en las estudiantes y entender las causas sociales, a través de un sistema de clasificación que permita identificar con precisión los colectivos más vulnerables.
+
+Esta herramienta podría integrarse en plataformas educativas o en sistemas de apoyo psicológico de instituciones académicas indias, con el fin de facilitar intervenciones personalizadas y prevenir el agravamiento de cuadros depresivos. A largo plazo, este tipo de modelo podría escalarse e integrarse en entornos más amplios de salud pública y bienestar estudiantil.
+
+**¿Has establecido un procedimiento para recopilar datos para la demo?**
+Sí, se trabaja con un conjunto de datos previamente generado por terceros, que ha sido debidamente anonimizado y puesto a disposición pública con fines de investigación. El dataset incluye información de estudiantes como edad, género, hábitos de vida, rendimiento académico, y resultados de escalas estandarizadas de depresión. 
+
+**¿Te has planteado si realmente tu objetivo analítico puede ser respondido a partir de los datos disponibles?**
+El modelo estará limitado por la naturaleza y calidad de los datos disponibles. El dataset incluye estudiantes con distintos niveles de riesgo, pero posiblemente no cubre todas las tipologías académicas o sociales posibles. Por tanto, aunque podremos generar un modelo funcional para los grupos representados, su generalización a otros contextos requerirá ampliar la base de datos y validar el modelo.
+
+****
+# Verificar los datos - Análisis exploratorio
+****
+
+El primer paso para realizar un análisis exploratorio es cargar el fichero de datos.
+
+```{r}
+path = 'student_depression_dataset.CSV'
+studentsDepressionData <- read.csv(path, row.names=NULL)
+
+```
+
+
+```{r}
+structure = str(studentsDepressionData)
+
+```
+
+Observamos que nuestro juego de datos **contiene 27901 registros y 18 variables**.
+
++ **id** Un identificador único asignado a cada registro de estudiante en el conjunto de datos.
++ **Gender** El género del estudiante (Masculino, Femenino).
++ **Age** La edad del estudiante.
++ **City** La ciudad o región donde reside el estudiante.
++ **Academic.Pressure** Una medida que indica el nivel de presión que enfrenta el estudiante en el entorno académico.
++ **Work.Pressure** Una medida del nivel de presión relacionada con responsabilidades laborales
++ **CGPA** El promedio acumulado de calificaciones del estudiante, que refleja su rendimiento académico general.
++ **Study.Satisfaction** Un indicador de cuán satisfecho está el estudiante con sus estudios. Siendo 1 poco y 5 mucho.
++ **Job.Satisfaction** Una medida del nivel de satisfacción del estudiante con su trabajo.
++ **Sleep.Duration** El número promedio de horas que duerme el estudiante por día.
++ **Dietary.Habits** Una evaluación de los patrones de alimentación y hábitos nutricionales del estudiante. Clasificados en "Healthy", "Modeate" y "UnHealthy"
++ **Degree** El grado académico o programa que está cursando el estudiante.
++ **Have.you.ever.had.suicidal.thoughts..** Un indicador binario (Sí/No) que refleja si el estudiante ha experimentado pensamientos suicidas.
++ **Work.Study.Hours** El número promedio de horas al día que el estudiante dedica a estudiar.
++ **Financial.Stress** Una medida del estrés provocado por preocupaciones económicas.
++ **Family.History.of.Mental.Illness** Indica si existen antecedentes familiares de enfermedades mentales (Sí/No).
++ **Depression ** La variable objetivo que indica si el estudiante está experimentando depresión
+
+****
+# Preprocesado de datos - Limpieza y acondicionado
+****
+Una vez recopilados los datos, el siguiente paso es asegurar que la información esté limpia, estructurada y libre de inconsistencias. Esta fase es clave para garantizar la fiabilidad de los resultados que obtendremos.
+
+****
+## Verificación de vacíos o nulos
+****
+
+El primer paso en la limpieza de datos ha sido comprobar la existencia de valores nulos o datos en blanco. 
+
+```{r}
+colSums(is.na(studentsDepressionData))
+```
+
+Tras una revisión completa, hemos confirmado que **no existen nulos ni espacios en blanco** en el conjunto de datos; esto nos indica una buena calidad inicial.
+
+En caso de haber detectado valores ausentes que pudieran afectar al análisis, la estrategia elegida habría sido sustituirlos por medidas estadísticas como la media, mediana o moda, en lugar de eliminarlos directamente, evitando así la pérdida innecesaria de información.
+
+****
+## Revisión de errores tipográficos
+****
+
+Seguidamente, procederá a la verificación de posibles errores tipográficos en las variables categóricas. Se han revisado las siguientes variables:
+
+**Género**
+Se verifica que los valores están correctamente etiquetados como “Male”, “Female”.
+
+```{r}
+unique(studentsDepressionData$Gender)
+```
+
+**Ciudad**
+
+```{r}
+unique(studentsDepressionData$City)
+```
+
+Se han **detectado algunas inconsistencias**, como entradas con errores de escritura o formatos atípicos, como un valor numérico en lugar de nombres de ciudad. "'Less than 5 Kalyan'" y "'Less Delhi'" serán eliminadas porque ya existen las ciudades y el valor numérico "3.0" no corresponde a esta columna.
+
+```{r}
+
+studentsDepressionData <- studentsDepressionData[studentsDepressionData$City != "0.3", ]
+
+studentsDepressionData <- studentsDepressionData[studentsDepressionData$City != "'Less than 5 Kalyan'", ]
+
+
+studentsDepressionData <- studentsDepressionData[studentsDepressionData$City != "'Less Delhi'", ]
+
+unique(studentsDepressionData$City)
+```
+
+Eliminaremos estos datos previamente al análisis de contexto para tener un dataset limpio y que no influya esta información errónea en las primeras conclusiones.
+
+**Profesión**
+
+```{r}
+unique(studentsDepressionData$Profession)
+
+```
+Los datos son correctos, aunque se han detectado algunas entradas con comillas innecesarias que se pueden normalizar. Estas no afectan a la validez de la información. 
+
+De todas maneras, para analizar este apartado necesitamos identificar a los estudiantes que se dedican exclusivamente a sus estudios, diferenciándolos de aquellos que también trabajan. 
+Esto nos permitirá centrarnos únicamente en los estudiantes que dedican todo su tiempo al estudio. Podemos ver que la cantidad de personas que son estudiante/trabajador es relativamente pequeña por ello vamos a eliminarla del conjunto a trabajar.
+
+```{r}
+
+table(studentsDepressionData$Profession)
+
+studentsDepressionData$Profession[studentsDepressionData$Profession != "Student"] <- NA
+
+studentsDepressionData <- studentsDepressionData[!is.na(studentsDepressionData$Profession), ]
+
+unique(studentsDepressionData$Profession)
+```
+
+
+*NOTA:* En el análisis de datos se explicará porque solo se tiene en cuenta la variable categoría "Student" que ya está correctamente normalizada.
+
+**Hábitos alimenticios**
+
+```{r}
+unique(studentsDepressionData$Dietary.Habits)
+
+```
+En la variable Dietary Habits se identificaron inicialmente cuatro categorías: Healthy, Moderate, Unhealthy y Others.
+
+```{r}
+
+table(studentsDepressionData$Dietary.Habits)
+
+```
+
+Dado que la categoría Others no define claramente los hábitos alimenticios de los estudiantes, consideramos importante analizar su presencia en el conjunto de datos. Al revisar el número de registros, observamos que Others únicamente con 12 registros.
+
+```{r}
+
+studentsDepressionData$Dietary.Habits[studentsDepressionData$Dietary.Habits == "Others"] <- NA
+
+studentsDepressionData <- studentsDepressionData[!is.na(studentsDepressionData$Dietary.Habits), ]
+
+unique(studentsDepressionData$Dietary.Habits)
+
+```
+
+Debido a que Others representa una proporción muy pequeña del total y podría introducir ruido en el modelo de clasificación, decidimos eliminar estos registros antes de continuar con el análisis. 
+
+**Horas de sueño**
+
+```{r}
+unique(studentsDepressionData$Sleep.Duration)
+
+table(studentsDepressionData$Sleep.Duration)
+
+```
+
+En la variable Dietary Habits se identificaron inicialmente cuatro categorías que corresponden a las horas de sueño diarias de un estudiante. 
+
+Dado que la variable "Others" no corresponde a ninguna tipología y tiene un número reducido de registros, procederemos a eliminarlo.
+
+```{r}
+
+studentsDepressionData$Sleep.Duration[studentsDepressionData$Sleep.Duration == "Others"] <- NA
+
+studentsDepressionData <- studentsDepressionData[!is.na(studentsDepressionData$Sleep.Duration), ]
+
+unique(studentsDepressionData$Profession)
+
+```
+
+**Estrés financiero**
+
+El campo Financal.Stress está guardado como dato caracteres, pero para tratarlos en futuras estadísticas nos interesa que sean datos numéricos.
+
+```{r}
+library(dplyr)
+
+studentsDepressionData$Financial.Stress <- as.numeric(studentsDepressionData$Financial.Stress)
+
+```
+
+Debido al cambio de tipado es posible que se hayan creado valores nulos. Vamos a eliminarlos.
+
+```{r}
+
+studentsDepressionData <- studentsDepressionData %>% 
+  filter(!is.na(Financial.Stress))
+
+```
+
+
+**Tipología académica**
+
+```{r}
+unique(studentsDepressionData$Degree)
+```
+En este dataset encontramos la presencia de nomenclaturas educativas propias del sistema indio. Estan agrupadas por niveles (grados, másteres, doctorados). Por ejemplo:
+
++ B.Pharm: Grado en Farmacia = G.Farmacia
++ LLB: Grado en Derecho  = M.Derecho
++ M.Tech: Máster en Ingeniería
++ PhD: Doctorado
++ MD: Especialidad después del grado de medicina MIR
+
+Esta conversión (hecha en una columna addicional) se realizará en el analisis de datos ya que facilitará el entendimiento y la segmentación por nivel educativo.
+
+Por otro lado, podemos encontrar entradas con errores de escritura "'Class 12'" esta será eliminada.
+
+```{r}
+
+studentsDepressionData <- studentsDepressionData[studentsDepressionData$Degree != "'Class 12'", ]
+
+
+unique(studentsDepressionData$Degree)
+```
+
+**Pensamientos suicidas**
+
+```{r}
+unique(studentsDepressionData$Have.you.ever.had.suicidal.thoughts..)
+```
+Se han revisado las respuestas y se ha comprobado que se encuentran correctamente registradas en formato ( "Sí" y "No" ).
+
+****
+## Verificación de valores duplicados
+****
+
+Por último, se ha realizado una comprobación para detectar posibles registros duplicados en el conjunto de datos. 
+
+El análisis ha confirmado que no existen registros repetidos, por lo que no ha sido necesario aplicar ningún tratamiento adicional en este aspecto.
+
+```{r}
+studentsDepressionData_duplicados <- duplicated(studentsDepressionData)
+
+studentsDepressionData[duplicated(studentsDepressionData),]
+```
+
+****
+# Preprocesado de datos - Métodos de discretización
+****
+
+**El objetivo de este análisis es ver qué tipologías académicas escogidas por mujeres que están relacionadas con la depresión, y qué factores influyen en ello.**
+
+Teniendo esto en cuenta y para situarnos en el contexto, vamos a describir los valores en términos generales. Y generar los primeros histogramas.
+
+```{r}
+summary(studentsDepressionData[c("Depression")])
+```
+Realizando un resumen de la **variable Depression** podemos comprender que aproximadamente el 55% de los estudiantes tienen depresión, según la media encontrada.
+
+Esto indica una prevalencia significativa del problema, ahora nos falta determinar las tipologías académicas más relevantes y factores externos que puedan influir.
+
+Seguidamente, vamos a analizar el número de muertes por género.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+library(ggplot2)
+library(dplyr)
+objeto <- unique(studentsDepressionData$Gender)
+
+listname <- character(length(objeto)) 
+listfatal <- numeric(length(objeto)) 
+listid <- numeric(length(objeto))   
+
+for(i in seq_along(objeto)) {
+  elemento <- objeto[i]
+  
+  matching_rows <- studentsDepressionData[studentsDepressionData$Gender == elemento, ]
+  
+  listname[i] <- unique(matching_rows$Gender)[1]  
+  listfatal[i] <- sum(matching_rows$Depression, na.rm = TRUE)  
+  listid[i] <- i
+}
+
+studentsDepressionDataGender <- data.frame(id = listid, Gender=listname, Depression = listfatal)
+
+ggplot(studentsDepressionDataGender, aes(x = reorder(Gender, Depression), y = Depression, fill = Gender)) +
+  geom_col() +
+  coord_flip() + 
+  ggtitle("Número de estudiantes depresivos por género") +
+  labs(x = "Género", y = "Número de estudiantes depresivos") +
+  theme_minimal() + 
+  theme(legend.position = "none")
+
+
+
+```
+
+En este diagrama se observa que, en general, los hombres presentan el porcentaje más alto de estudiantes con depresión. Sin embargo, surge la pregunta: ¿cuál es la proporción de mujeres que están estudiando, considerando el contexto del país? Vamos a  verificar cuántas mujeres están inscritas en el sistema educativo.
+
+***
+## Codificación variable profesión
+***
+
+**Codificaremos la variable** que indica si una persona es solo estudiante o estudiante/trabajador, transformándola en una representación numérica. Asignaremos un valor de "0" a los estudiantes que solo estudian y "1" a aquellos que combinan el estudio con el trabajo. 
+
+Dado que hemos tratado con anterioridad el hecho de que el dataset no tenga estudiantes trabajadores solo necesitaremos convertir la variable Student en un numerico.
+
+```{r}
+studentsDepressionData$IsStudent <- with(studentsDepressionData, ifelse(Profession %in% c("Student"), 1, 0))
+
+
+```
+
+
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+library(ggplot2)
+library(dplyr)
+objeto <- unique(studentsDepressionData$Gender)
+
+listname <- character(length(objeto)) 
+listfatal <- numeric(length(objeto)) 
+listid <- numeric(length(objeto))   
+
+for(i in seq_along(objeto)) {
+  elemento <- objeto[i]
+
+  matching_rows <- studentsDepressionData[studentsDepressionData$Gender == elemento, ]
+  
+  listname[i] <- unique(matching_rows$Gender)[1]  
+  listfatal[i] <- sum(matching_rows$IsStudent, na.rm = TRUE)  
+  listid[i] <- i
+}
+
+studentsDepressionDataGenderIsStudent <- data.frame(id = listid, Gender=listname, IsStudent = listfatal)
+
+ggplot(studentsDepressionDataGenderIsStudent, aes(x = reorder(Gender, IsStudent), y = IsStudent, fill = Gender)) +
+  geom_col() +
+  geom_text(aes(label = IsStudent), hjust = -0.1, size = 2) + 
+  coord_flip() + 
+  ggtitle("Número de estudiantes por género") +
+  labs(x = "Género", y = "Número de estudiantes") +
+  theme_minimal() + 
+  theme(legend.position = "none")
+
+
+```
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+
+female_count <- studentsDepressionDataGenderIsStudent$IsStudent[studentsDepressionDataGenderIsStudent$Gender == "Female"]
+male_count <- studentsDepressionDataGenderIsStudent$IsStudent[studentsDepressionDataGenderIsStudent$Gender == "Male"]
+
+diferencia <- male_count - female_count
+
+porcentaje_female <- (diferencia / female_count) * 100
+
+porcentaje_male <- (diferencia / male_count) * 100
+
+total <- female_count + male_count
+porcentaje_total <- (diferencia / total) * 100
+
+print(paste("Mujeres estudiantes:", female_count))
+print(paste("Hombres estudiantes:", male_count))
+print(paste("Diferencia de estudiantes:", diferencia))
+print(paste("Porcentaje respecto a Female:", round(porcentaje_female, 2), "%"))
+print(paste("Porcentaje respecto a Male:", round(porcentaje_male, 2), "%"))
+print(paste("Porcentaje respecto al total:", round(porcentaje_total, 2), "%"))
+
+```
+Al analizar el número de estudiantes según el género, observamos que **hay 12137 estudiantes de género Male** y **9622 de género Female**, con una **diferencia de 2515 estudiantes**. Esta diferencia representa aproximadamente un **20.72% más de estudiantes masculinos** en comparación con los femeninos. 
+Si consideramos el total combinado de ambos géneros, la diferencia supone un 11.56% del total. Estos datos indican que, dentro del conjunto analizado, el **género masculino tiene una representación significativamente mayor entre los estudiantes,** respaldando nuestra hipótesis de que la mujer tiene menos acceso a la educación en este país.
+
+Ahora vamos a centrarnos en la cantidad de carreras cursadas por estas mujeres. 
+
+Para ello, crearemos una columna de traducción, para poder entender claramente qué tipologías académicas se presentan en los datos. Para ello creamos la siguiente función:
+
+```{r}
+studentsDepressionData <- studentsDepressionData %>%
+  mutate(Degree_es = case_when(
+    Degree %in% c("B.Sc", "BSc") ~ "Grado en Ciencias",
+    Degree %in% c("B.A", "BA") ~ "Grado en Humanidades o Letras",
+    Degree == "B.Com" ~ "Grado en Comercio o ADE",
+    Degree == "BCA" ~ "Grado en Informática Aplicada",
+    Degree == "BBA" ~ "Grado en Administración de Empresas",
+    Degree == "B.Ed" ~ "Grado en Educación",
+    Degree == "BHM" ~ "Grado en Gestión Hotelera",
+    Degree == "B.Pharm" ~ "Grado en Farmacia",
+    Degree %in% c("B.Tech", "BE") ~ "Grado en Ingeniería (Tecnología o General)",
+    Degree == "B.Arch" ~ "Grado en Arquitectura",
+    Degree == "LLB" ~ "Grado en Derecho",
+    Degree == "MBBS" ~ "Grado en Medicina (pre-MIR)",
+    
+    Degree %in% c("M.Sc", "MSc") ~ "Máster en Ciencias",
+    Degree %in% c("M.A", "MA") ~ "Máster en Humanidades",
+    Degree == "M.Com" ~ "Máster en Finanzas, ADE o Comercio",
+    Degree == "M.Ed" ~ "Máster en Educación",
+    Degree == "MBA" ~ "Máster en Dirección de Empresas",
+    Degree == "MCA" ~ "Máster en Informática Aplicada",
+    Degree == "M.Pharm" ~ "Máster en Farmacia",
+    Degree %in% c("M.Tech", "ME") ~ "Máster en Ingeniería",
+    Degree == "MHM" ~ "Máster en Gestión Hotelera",
+    Degree == "LLM" ~ "Máster en Derecho",
+    Degree == "MD" ~ "Especialidad médica MIR",
+    Degree == "PhD" ~ "Doctorado",
+    Degree == "Others" ~ "Otros",
+
+  ))
+```
+
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+library(ggplot2)
+library(dplyr)
+
+genero_seleccionado <- "Female"
+
+studentsDepressionData_femaleDegree <- studentsDepressionData %>%
+  filter(Gender == genero_seleccionado)
+
+ggplot(studentsDepressionData_femaleDegree, aes(x = reorder(Degree_es, IsStudent), y = IsStudent, fill = Degree)) +
+  geom_col() +
+  coord_flip() + 
+  ggtitle("Tipologías académicas cursadas por mujeres") +
+  labs(x = "Tipologías académicas", y = "Número de mujeres estudiantes") +
+  theme_minimal() + 
+  theme(legend.position = "none")
+```
+
+Podemos ver que generalmente las mujeres están estudiando grados académicos. Siendo el TOP 5:
+
+1. Grado en educación
+2. Grado de arquitectura
+3. Grado de ingeniería
+4. Grado de comercio o ADE
+5. Grado de informática aplicada
+
+Vamos a calcular también el porcentaje de mujeres que acceden a estudios superiores clasificados por grados, másteres y doctorado.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+library(dplyr)
+library(ggplot2)
+
+studentsDepressionDataPorcentajeType <- studentsDepressionData %>%
+  filter(Gender == "Female")
+
+studentsDepressionDataPorcentajeType <- studentsDepressionDataPorcentajeType %>%
+  mutate(TipoEstudio = case_when(
+    grepl("^Grado", Degree_es) ~ "Grado",
+    grepl("^Máster", Degree_es) ~ "Máster",
+    Degree_es == "Doctorado" ~ "Doctorado",
+    Degree_es == "Otros" ~ "Otros",
+  )) %>%
+  filter(!is.na(TipoEstudio))
+
+female_summary <- studentsDepressionDataPorcentajeType %>%
+  group_by(TipoEstudio) %>%
+  summarise(total = n()) %>%
+  mutate(Porcentaje = (total / sum(total)) * 100)
+
+ggplot(female_summary, aes(x = TipoEstudio, y = Porcentaje, fill = TipoEstudio)) +
+  geom_col() +
+  geom_text(aes(label = paste0(round(Porcentaje, 1), "%")), vjust = -0.5) +
+  theme_minimal() +
+  labs(title = "Porcentaje de mujeres según el tipo de estudios",
+       x = "Tipo de Estudio",
+       y = "Porcentaje") +
+  theme(legend.position = "none")
+
+```
+
+A pesar de que el acceso a los estudios de las mujeres indias ha mejorado con el paso de los años, podemos ver que menos de la mitad acceden a estudios superiores después del grado y un porcentaje muy bajo accede al doctorado.
+
+Ahora vamos a enlazar las carreras más escogidas por este género con las carreras que presentan más altos niveles de depresión.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+library(ggplot2)
+library(dplyr)
+
+genero_seleccionado <- "Female" 
+
+studentsDepressionData_femaleDegree <- studentsDepressionData %>%
+  filter(Gender == genero_seleccionado)
+
+ggplot(studentsDepressionData_femaleDegree, aes(x = reorder(Degree_es, Depression), y = Depression, fill = Degree)) +
+  geom_col() +
+  coord_flip() + 
+  ggtitle("Tipologías académicas con más depresión") +
+  labs(x = "Tipologías académicas", y = "Número de mujeres estudiantes con depression") +
+  theme_minimal() + 
+  theme(legend.position = "none")
+```
+
+Al analizar los datos, se observa que las carreras en las que hay más mujeres con síntomas de depresión coinciden con las áreas académicas que suelen tener mayor representación femenina en general.
+Esto sugiere que la mayor cantidad de casos no necesariamente indica una mayor vulnerabilidad en ciertas carreras, sino que puede ser consecuencia de la mayor proporción de mujeres en esas áreas de estudio.
+
+Por tanto, la relación entre tipología académica y depresión podría estar parcialmente explicada por el sesgo de distribución de género en las titulaciones, y no exclusivamente por factores propios de la carrera en sí.
+
+Vamos a analizar la carrera de arquitectura y los factores externos que experimentan las estudiantes para que suponga la tipología académica con más depresión.
+
+Empezaremos por la presión académica:
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+library(ggplot2)
+library(dplyr)
+
+genero_seleccionado <- "Female"  
+
+studentsDepressionData_femaleDegreeArq <- studentsDepressionData %>%
+  filter(Gender == genero_seleccionado, Degree_es == "Grado en Arquitectura")
+
+ggplot(studentsDepressionData_femaleDegreeArq, aes(x = Academic.Pressure)) +
+  geom_histogram(bins = 20, fill = "lightblue", color = "black") +
+  theme_minimal() +
+  labs(title = "Distribución de la presión académica en arquitectura",
+       x = "Nivel de presión académica",
+       y = "Número de estudiantes")
+```
+
+El análisis muestra que la mayoría de las estudiantes de arquitectura perciben una presión académica de nivel moderado (valor 3), seguido de cerca por aquellas que experimentan una presión máxima (valor 5). 
+
+Esto indica que, aunque muchas manejan la carga académica de forma equilibrada, pero existe un grupo considerable que enfrenta niveles de estrés muy altos. La presencia destacada de ambos extremos sugiere que la carrera de Arquitectura presenta importantes desafíos emocionales.
+
+***
+## Discretización variable CGPA
+***
+
+Seguidamente, analizaremos si esta presión académica va relacionada con CGPA de los estudiantes. 
+
+Como su definición indica, consiste en convertir una variable numérica en intervalos o categorías. Y eso es justo lo que necesitamos para tratar el campo. Este dispone de las notas globales de los estudiantes, pero solo nos interesa saber un valor global para categorizarlos en Excelente, Notable, Suficiente y Suspenso. 
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+studentsDepressionData["CGPA_SEG"] <- cut(
+  studentsDepressionData$CGPA,
+  breaks = c(0.0, 5.0, 6.0, 7.0, 9.0, 10.0),
+  labels = c("Suspenso", "Suficiente", "Notable","Notable-Alto", "Excelente"),
+  include.lowest = TRUE
+)
+```
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+library(ggplot2)
+
+ggplot(studentsDepressionData, aes(x = CGPA_SEG, y = Academic.Pressure, fill = CGPA_SEG)) +
+  geom_boxplot() +
+  theme_minimal() +
+  labs(
+    title = "Presión Académica según Segmento de CGPA",
+    x = "Segmento de CGPA",
+    y = "Presión Académica"
+  ) +
+  theme(legend.position = "none")
+
+```
+
+Con este gráfico podemos saber que:
+
++ **El grupo suspenso**: Tiene menos presión académica, posiblemente por la falta de compromiso en los estudios.
+
++ **El grupo suficiente**: Tiene una gran dispersión en la presión académica (bigotes largos), lo que sugiere que los estudiantes en este grupo experimentan diferentes niveles de presión y esto puede deberse a factores externos.
+
++ **Notable/Excelente**: Tiene más presión académica, pero menos variable, esto indica que los estudiantes comparten una experiencia académica más homogénea.
+
+
+En conclusión, la presión académica no es solo una cuestión de rendimiento, sino que también depende de factores individuales y externos.
+
+Por otro lado, podemos descartar la presión del trabajo, ya que hemos eliminado anteriormente los estudiantes trabajadores.
+
+***
+## Normalización y codificación de una vida equilibrada
+***
+
+Otro factor a tener en cuenta es si la estudiante lleva una vida equilibrada. Esto se considera que la estudiante duerme las horas recomendadas (de 7 a 9), estudia entre 4-6 horas al día y tiene unos hábitos de dieta saludables.
+
+Para crear esta variable combinando otras, vamos a necesitar tratar los datos. Clasificaremos como una persona no equilibrada si duerme <7, estudia > 6, hábitos de dieta son "unhealty".
+
+**Variable de sueño**
+
+Para esta variable necesitaremos dos métodos de discretización, una codificación de los valores de categorías a numéricos, para poder un número más o menos exacto de horas y luego una normalización para convertirlo a una escala estándar que nos permita saber si las horas de sueño son equilibradas.
+
+Verificamos primeramente las distintas variables clásicas que tenemos en el conjunto de datos.
+
+```{r}
+unique(studentsDepressionData$Sleep.Duration)
+
+```
+
+*Codificación*
+
+Se van a asignar valores específicos según el rango de horas dormidas, facilitando así su análisis posterior. Además, se verifica previamente la distribución de los datos para entender que categorías existen.
+
+```{r}
+
+table(studentsDepressionData$Sleep.Duration)
+
+studentsDepressionData <- studentsDepressionData %>%
+  mutate(Sleep.Duration_Numeric = case_when(
+    Sleep.Duration == "'5-6 hours'" ~ 5,  
+    Sleep.Duration == "'Less than 5 hours'" ~ 4, 
+    Sleep.Duration == "'7-8 hours'"  ~ 7,  
+    Sleep.Duration == "'More than 8 hours'" ~ 9,
+  ))
+
+```
+
+
+*Normalización*
+Ahora se transformará y creará un variable asociada a Sleep.Duration_Numeric que permita interpretar de forma más clara los hábitos de sueño de los estudiantes. Consideraremos como "persona equilibrada" (valor 1) a aquellos estudiantes que duermen 7 horas o más al día, siguiendo las recomendaciones de organismos de salud internacionales. 
+
+Por el contrario, asignaremos un valor de 0 a quienes duerman menos de 7 horas, clasificándolos como "persona no equilibrada". 
+Esta distinción nos permitirá evaluar de manera más precisa la relación entre los patrones de sueño.
+
+
+```{r}
+studentsDepressionData <- studentsDepressionData %>%
+  mutate(Sleep.Duration_Balanced = ifelse(Sleep.Duration_Numeric >= 7, 1, 0))
+```
+
+**Variable de hábitos alimentarios**
+
+Ahora trataremos con la variable Dietary.Habits, realizaremos de nuevo una *normalización* con la misma intención:
+
+```{r}
+
+unique(studentsDepressionData$Dietary.Habits)
+
+studentsDepressionData <- studentsDepressionData %>%
+  mutate(Dietary.Habits_Balanced = ifelse(Dietary.Habits == "Unhealthy", 0, 1))
+```
+
+**Variable de horas de estudio**
+
+Finalmente trataremos con las horas de estudio, realizaremos otra *normalización*:
+
+```{r}
+studentsDepressionData <- studentsDepressionData %>%
+  mutate(Work.Study.Hours_Balanced = ifelse(Work.Study.Hours <= 6, 1, 0))
+```
+
+**Crossing variable de estudiante equilibrado**
+
+Vamos a crear una nueva variable que identifique si una estudiante lleva una vida equilibrada, combinando todas las variables creadas anteriormente. 
+
+Asignaremos un valor de 1 a quienes duerman entre 7 y 9 horas, estudien entre 4 y 6 horas diarias y mantengan hábitos de dieta saludables. En caso contrario, recibirán un valor de 0, considerándolas como personas no equilibradas. 
+
+Esta variable será la que utilizamos para realizar una correlación con la depresión.
+
+```{r}
+studentsDepressionData <- studentsDepressionData %>%
+  mutate(IsBalancedStudent = ifelse(Work.Study.Hours_Balanced == 1 & Dietary.Habits_Balanced == 1 & Sleep.Duration_Balanced == 1, 1, 0))
+
+```
+
+Utilizando esta variable vamos a mirar que porcentaje de estudiantes tienen una vida saludable.
+
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+library(ggplot2)
+library(dplyr)
+
+genero_seleccionado <- "Female"
+
+studentsDepressionData_femaleDegreeArq2 <- studentsDepressionData %>%
+  filter(Gender == genero_seleccionado, Degree_es == "Grado en Arquitectura") %>%
+  na.omit() 
+
+studentsDepressionData_femaleDegreeArq2_summary <- studentsDepressionData_femaleDegreeArq2 %>%
+  group_by(IsBalancedStudent) %>%
+  summarise(count = n()) %>%
+  mutate(percentage = count / sum(count) * 100)
+
+ggplot(studentsDepressionData_femaleDegreeArq2_summary, aes(x = reorder(IsBalancedStudent, count), y = count, fill = factor(IsBalancedStudent))) +
+  geom_col() +
+  coord_flip() + 
+  ggtitle("Estudiantes con vida equilibrada en elgrado en arquitectura") +
+  labs(x = "Vida equilibrada", y = "Número de mujeres estudiantes") +
+  geom_text(aes(label = paste0(round(percentage, 1), "%")), 
+            position = position_stack(vjust = 0.5), size = 5, color = "white") + 
+  theme_minimal() + 
+  theme(legend.position = "none")
+
+
+```
+
+
+****
+# Preprocesado de datos - Aplicación del proceso PCA y SVD
+****
+
+****
+## Aplicación del proceso PCA
+****
+
+Como la nomenclatura indica, haremos un análisis de componentes principales para reducir la dimensionalidad de los datos; trabajaremos sobre el proceso PCA.
+
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+
+n = c("Academic.Pressure", "CGPA","Study.Satisfaction", "Work.Study.Hours", "Financial.Stress", "Depression")
+studentsDepressionDataAux = studentsDepressionData %>% select(all_of(n))
+
+pca.acc <- prcomp(studentsDepressionDataAux, scale. = TRUE)  # Normaliza antes de PCA
+
+summary(pca.acc)
+
+```
+
+Este método encuentra direcciones de mayor variancia, se puede utilizar sin usar la desviación estándar, pero puede distorsionar el análisis de dispersión, especialmente cuando las variables originales tienen escalas muy distintas, como es el caso, y esto llevaría a interpretaciones incorrectas.
+
+Por lo tanto, se ha añadido al comando el valor "scale" para escalar los datos y utilizar esta desviación estándar. 
+
+Los resultados son los siguientes:
+
+```{r}
+if (!require('factoextra')) install.packages('factoextra'); library('factoextra')
+ev= get_eig(pca.acc)
+ev
+fviz_eig(pca.acc)
+```
+
+
+El gráfico (llamado de codo)  muestra que los primeros componentes principales (PC1 y PC2) explican la mayor parte de la variabilidad en los datos, mientras que los siguientes tienen una contribución menor. 
+
+Luego podemos ver que los componentes (PC2, PC3, PC4 e incluso PC5) tienen una variabilidad en los datos muy semejante.
+
+Aun así, en este análisis se han utilizado componentes con media varianza, porque contienen información clave sobre variables específicas, como la presión académica o las horas de estudio invertidas.
+
+Aunque PCA suele usarse para reducir dimensiones, y según el gráfico se puede reducir a tres,  el caso tratado durante en esta práctica se ha priorizado el análisis de datos para sacar conclusiones.
+
+Para mejorar el análisis, se pueden revisar las cargas de cada variable en los PCs o aplicar otras técnicas para extraer conclusiones más precisas sin perder información relevante.
+
+Por otro lado, tenemos el análisis SVD, que se usa para identificar las direcciones principales de variación entre los datos, ayudando a reducir la dimensionalidad a partir de la descomposición de matrices.
+
+*NOTA:* para esta descomposición de valores singulares tampoco vamos a tener en cuenta el id, ya que sabemos que va a ser la variable con más variancia. Nos interesa analizar otros campos del dataset.
+
+****
+## Aplicación del proceso SVD
+****
+
+```{r}
+
+# Realizamos la descomposición SVD
+
+svd_result <- svd(studentsDepressionDataAux)
+summary(svd_result)
+
+```
+
+En el método SVD tiene las variables d, u y v representan los componentes principales:
+
++ **d** contiene los valores singulares (magnitudes de importancia).
+
++ **u** las combinaciones lineales de las filas.
+
++ **v** las combinaciones lineales de las columnas.
+
+Cada uno es un vector o matriz numérica de diferente tamaño según el dataset inicial.
+
+
+```{r}
+
+head(svd_result$d)
+
+```
+
+**Valores Singulares (svd_result$d)**
+
+Estos son los valores singulares de la descomposición. Los valores singulares indican la "importancia" o el peso de cada componente. El primer valor singular (1772.89874) es mucho mayor que los siguientes, lo que sugiere que el primer componente explica una gran parte de la varianza de los datos. A medida que nos movemos hacia los valores singulares más pequeños, la varianza explicada disminuye. 
+
+El primer componente (Academic.Pressure) es el más importante, y captura la mayor parte de la variabilidad de los datos. Esto significa que una gran parte de la información en los datos puede ser explicada por ese componente.
+
+**Proyecciones de las observaciones (svd_result$u): **
+
+```{r}
+
+head(svd_result$u)
+
+```
+
+La matriz representa la proyección de cada observación en los componentes principales. 
+Cada fila corresponde a un dato original y cada columna a un componente. Los valores pequeños indican que las observaciones están próximas al centro del nuevo espacio. Podemos ver que la mayor parte de la información se concentra en el primer componente.
+
+
+**Cargas de las variables (svd_result$v):**
+
+```{r}
+
+head(svd_result$v)
+
+```
+
+En esta matriz, cada fila representa una variable y cada columna un componente. Los valores indican la magnitud de la contribución de cada variable en cada componente. 
+
+Los valores más grandes sugieren que la variable tiene un mayor peso en ese componente. Al analizar estos datos, podemos identificar que si una variable tiene un valor absoluto alto en el primer componente, significa que tiene una influencia significativa en la variabilidad explicada por dicho componente.
+
+
+```{r}
+
+V1 <- svd_result$v[, 1]
+
+data_for_plot <- data.frame(
+  Variable = colnames(studentsDepressionDataAux), 
+  V1 = V1
+)
+
+library(ggplot2)
+ggplot(data_for_plot, aes(x = reorder(Variable, V1), y = V1)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  coord_flip() +
+  ggtitle("Contribución de las variables al primer componente (V1)") +
+  labs(x = "Variable", y = "Carga en el primer componente (V1)") +
+  theme_minimal()
+
+```
+
+El gráfico muestra cómo distintas variables contribuyen al primer componente principal (V1). "Work.Study.Hours" y "CGPA" tienen las cargas negativas más altas, lo que indica que son las variables que más explican la variabilidad en este componente. "Financial.Stress", "Academic.Pressure" y "Study.Satisfaction" también aportan, aunque en menor medida, mientras que "Depression" apenas influye y en sentido positivo.
+
+**Conclusión**
+
+En este análisis de dimensionalidad, la descomposición SVD nos ha permitido identificar qué componentes principales explican mejor la variabilidad de los datos. 
+Observamos que el primer componente concentra la mayor parte de la información, destacando variables como "Work.Study.Hours" y "CGPA" como factores clave. El análisis de las cargas realizado confirma que las variables relacionadas con las horas de estudio y resultados académicos son determinantes en la variabilidad de este conjunto.
+
+
+****
+# Datos de correlación
+****
+
+El objetivo de buscar correlaciones es identificar relaciones entre variables, es decir, ver si dos factores se mueven juntos de alguna manera.
+En nuestro caso, queremos saber si ciertos factores externos como presión académica, duración del sueño, hábitos alimenticios o estrés financiero están asociados a la aparición de síntomas de depresión en las estudiantes.
+
+Si encontramos alguna correlación positiva o negativa significativa podemos intuir posibles factores de riesgo.
+
+**Presión academica**
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+
+genero_seleccionado <- "Female"  
+
+studentsDepressionData_femaleDegreeArq <- studentsDepressionData %>%
+  filter(Gender == genero_seleccionado, Degree_es == "Grado en Arquitectura")
+
+cor(studentsDepressionData_femaleDegreeArq$Academic.Pressure, studentsDepressionData_femaleDegreeArq$Depression, use = "complete.obs")
+
+
+library(ggplot2)
+
+# Scatter plot con línea de tendencia
+ggplot(studentsDepressionData_femaleDegreeArq, aes(x = Academic.Pressure, y = Depression)) +
+  geom_point(color = "steelblue", alpha = 0.6) + # puntos dispersos
+  geom_smooth(method = "lm", color = "red", se = FALSE) + # línea de regresión lineal
+  theme_minimal() +
+  labs(
+    title = "Relación entre la presión académica y depresión en la carrera de arquitectura",
+    x = "Presión académica",
+    y = "Depresión"
+  )
+
+```
+
+Se observa una correlación positiva moderadamente fuerte (r = 0.514) entre la presión académica y la presencia de síntomas de depresión en estudiantes mujeres del grado en arquitectura.
+Esto indica que **niveles más altos de presión académica están asociados a un mayor riesgo de depresión.**
+
+**Antecedentes familiares**
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+
+genero_seleccionado <- "Female"  
+
+studentsDepressionData_femaleDegreeArq <- studentsDepressionData %>%
+  filter(Gender == genero_seleccionado, Degree_es == "Grado en Arquitectura")
+
+studentsDepressionData_femaleDegreeArq <- studentsDepressionData_femaleDegreeArq %>%
+  mutate(Family.History.of.Mental.Illness_numeric = ifelse(Family.History.of.Mental.Illness == "Yes", 1, 0))
+
+cor(studentsDepressionData_femaleDegreeArq$Family.History.of.Mental.Illness_numeric, studentsDepressionData_femaleDegreeArq$Depression, use = "complete.obs")
+
+
+library(ggplot2)
+
+# Scatter plot con línea de tendencia
+ggplot(studentsDepressionData_femaleDegreeArq, aes(x = Family.History.of.Mental.Illness_numeric, y = Depression)) +
+  geom_point(color = "steelblue", alpha = 0.6) + # puntos dispersos
+  geom_smooth(method = "lm", color = "red", se = FALSE) + # línea de regresión lineal
+  theme_minimal() +
+  labs(
+    title = "Relación entre registros familiares de enfermedades mentales y la depresión",
+    x = "Antecedentes de enfermedades mentales",
+    y = "Depresión"
+  )
+
+```
+
+El gráfico muestra la relación entre los antecedentes familiares de enfermedades mentales y la presencia de depresión en el colectivo analizado. Ambas variables son binarias, por lo que los puntos de datos solo se sitúan en los puntos 0 o 1.
+
+Se observa que la pendiente de la línea es positiva pero muy ligera, indicando que existe una relación positiva débil. Las **estudiantes con antecedentes familiares de enfermedades mentales tienen una leve mayor probabilidad de presentar depresión** en comparación con aquellas que no tienen antecedentes familiares.
+
+Visualmente, los puntos están dispersos y la línea es casi horizontal, lo que confirma que la relación es muy débil, aunque presente.
+
+**Vida equilibrada**
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+
+genero_seleccionado <- "Female"  
+
+studentsDepressionData_femaleDegreeArq <- studentsDepressionData %>%
+  filter(Gender == genero_seleccionado, Degree_es == "Grado en Arquitectura")
+
+cor(studentsDepressionData_femaleDegreeArq$IsBalancedStudent, studentsDepressionData_femaleDegreeArq$Depression, use = "complete.obs")
+
+
+library(ggplot2)
+
+# Scatter plot con línea de tendencia
+ggplot(studentsDepressionData_femaleDegreeArq, aes(x = IsBalancedStudent, y = Depression)) +
+  geom_point(color = "steelblue", alpha = 0.6) + # puntos dispersos
+  geom_smooth(method = "lm", color = "red", se = FALSE) + # línea de regresión lineal
+  theme_minimal() +
+  labs(
+    title = "Relación entre una vida equilibrada y la depresión",
+    x = "Vida equilibrada",
+    y = "Depresión"
+  )
+
+```
+
+Esta correlación nos presenta una pendiente negativa que indica una relación inversa clara entre tener una vida equilibrada y los niveles de depresión. Podemos decir que **cuanto más equilibrada es la vida de las estudiantes, menos niveles de depresión presentan**.
+
+**Estres financiero**
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+cor(studentsDepressionData_femaleDegreeArq$Financial.Stress, studentsDepressionData_femaleDegreeArq$Depression, use = "complete.obs")
+
+
+library(ggplot2)
+
+# Scatter plot con línea de tendencia
+ggplot(studentsDepressionData_femaleDegreeArq, aes(x = Financial.Stress, y = Depression)) +
+  geom_point(color = "steelblue", alpha = 0.6) + # puntos dispersos
+  geom_smooth(method = "lm", color = "red", se = FALSE) + # línea de regresión lineal
+  theme_minimal() +
+  labs(
+    title = "Relación entre la prresión académica y depresión en la carrera de arquitectura",
+    x = "Presión académica",
+    y = "Depresión"
+  )
+
+```
+
+El gráfico describe  una relación directa entre el estrés financiero y la depresión. A medida que las estudiantes **experimentan niveles de estrés relacionados con su situación económica, también tienden a reportar mayores niveles de depresión**.
+Esto sugiere que los problemas financieros podrían ser un factor de riesgo importante para la salud mental de las estudiantes.
+
+****
+# Conclusión final
+****
+A lo largo de este estudio, se ha realizado un proceso de minería de datos aplicado a un problema social: la depresión en mujeres estudiantes en la India. Desde la selección y limpieza del conjunto de datos hasta la aplicación de técnicas avanzadas como PCA y SVD, cada paso ha sido guiado para confirmar la hipótesis y entender mejor los factores que inciden en la salud mental de este colectivo.
+
+El análisis inicial ha confirmado que, aunque la representación femenina en la educación superior india ha mejorado, sigue existiendo una brecha de género notable. En el conjunto de datos, encontramos que hay, 12136 estudiantes masculinos y **9620 estudiantes femeninas**, lo que refleja una **diferencia de 2,516** estudiantes. Este dato respalda nuestra hipótesis de que las mujeres tienen menos acceso a la educación en este país.
+
+Además, identificamos que las áreas académicas más elegidas por mujeres, Educación, Arquitectura, Ingeniería, Comercio e Informática, son también donde se concentran los niveles más altos de síntomas depresivos. Sin embargo, esta coincidencia parece estar más relacionada con el número elevado de mujeres en estas áreas que con una vulnerabilidad de las carreras.
+
+En particular, en el grado de Arquitectura, descubrimos que la presión académica está correlacionada positivamente con los síntomas de depresión, con una correlación moderadamente fuerte de **0.516**. 
+También se ha analizado el esfuerzo y rendimiento académico, resultando que los estudiantes con medio/mayor CGPA tienden a experimentar niveles más altos de presión académica, al contrario que los menos calificados.
+
+Además, encontramos que la vida equilibrada tiene una relación inversa con los niveles de depresión, lo que significa que las estudiantes con un estilo de vida más equilibrado reportan menos síntomas depresivos.
+
+En cuanto al estrés financiero, también encontramos una correlación positiva, sugiriendo que a mayor estrés relacionado con la situación económica, mayor es el nivel de depresión. Este patrón es especialmente relevante, ya que puede ser un factor de riesgo importante para la salud mental de las estudiantes.
+
+El análisis SVD reveló que los valores singulares obtenidos al descomponer la matriz de datos mostraron que el primer componente es el más relevante, capturando la mayor parte de la variabilidad en los datos y siendo una porción significativa de la información, con una fuerte asociación a factores como las horas de estudio y el rendimiento académico (CGPA). 
+
+
+En conjunto, el proyecto no solo evidencia la complejidad del fenómeno de la depresión en mujeres estudiantes en India, sino que también resalta la necesidad de estrategias de intervención que no solo atiendan al rendimiento académico, sino que también fomenten el bienestar de las estudiantes.
+
+
+****
+# Citaciones biográficas
+****
+
+## Referencias
+
+Para la investigación de la depresión en estudiantes, así como el uso de técnicas de minería de datos y análisis en salud mental, se consultaron diversas fuentes. A continuación, se presentan algunas de las más relevantes:
+
+1. **SVD (Descomposición en Valores Singulares):**
+   
+   - **MIT Course 18.095** (2016). *SVD Singular Value Decomposition*. [SVD Notes](https://math.mit.edu/classes/18.095/2016IAP/lec2/SVD_Notes.pdf)
+   
+   Estas notas del curso de matemáticas del MIT proporcionan una explicación detallada de la técnica de descomposición en valores singulares (SVD), utilizada en este estudio para el análisis de datos multivariantes.
+
+---
+
+## Materiales de Investigación
+
+- **Dataset de depresión estudiantil en India**: La base de datos utilizada en este análisis proviene de un proyecto de investigación colaborativo sobre salud mental de estudiantes universitarios en India, disponible en el [repositorio Kaggle](https://www.kaggle.com/datasets/adilshamim8/student-depression-dataset).
+  
+- **Herramientas de análisis de aatos**: Para la realización de la minería de datos y el análisis estadístico, se utilizó principalmente el software de R, específicamente las bibliotecas `dplyr`, `ggplot2`, y `FactoMineR` para el análisis de componentes principales (PCA) y singular value decomposition (SVD).
+
+- **Guías y tutoriales de R**: La documentación oficial de R y las guías de minería de datos proporcionaron los fundamentos técnicos para el manejo de los datos y la aplicación de técnicas estadísticas. [R Documentation](https://www.rdocumentation.org).
+
+---
+
+
+

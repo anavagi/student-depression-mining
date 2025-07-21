@@ -1,0 +1,830 @@
+---
+title: 'Minería de datos: PRA2 - Proyecto de minería de datos'
+author: "Autor: Ana Valero Giraldez"
+date: "Mayo 2025"
+output:
+  html_document:
+    highlight: default
+    number_sections: yes
+    theme: cosmo
+    toc: yes
+    toc_depth: 3
+    includes:
+      in_header: 75.584-PEC-header.html
+  word_document: default
+  pdf_document:
+    highlight: zenburn
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introducción
+
+En esta parte de la práctica seguimos abordando el análisis de un subconjunto de datos de las estudiantes universitarias de la India con el objetivo principal de clasificar a los individuos según su nivel de depresión.
+
+Se pretende identificar perfiles de estudiantes que son más propensas a presentar signos de depresión. Para ello, se emplearán diferentes técnicas de agrupamiento no supervisado, como K-means, K-medians y K-means con distancia Manhattan, fijando el número de clústeres en k = 2, en coherencia con la agrupación original de los datos.
+
+Posteriormente, se aplicará el algoritmo DBSCAN para explorar estructuras de densidad más flexibles. Finalmente, se implementarán árboles de decisión como método supervisado para validar y predecir la pertenencia a los grupos depresivos, permitiendo además interpretar qué variables explican mejor la clasificación.
+
+Empezaremos cargando los datos, escogiendo la minoría de mujeres y realizando un primer análisis de los datos.
+
+```{r message= FALSE, warning=FALSE}
+path = 'student_depression_dataset.csv'
+studentDepression <- read.csv(path, row.names=NULL)
+
+studentDepression <- subset(studentDepression, Gender == "Female")
+
+str(studentDepression)
+
+```
+
+Debido a la limpieza realizada en la práctica anterior, podemos ver que tenemos los datos dicretizados y sin nulos en sus columnas. Trabajaremos con variables categoricas y variables discretas. La variable target será “Depression”. Inicialmente, contamos con **9620 obs. of 27 variables** y, por el momento, no se realizará una reducción de la dimensionalidad ni una reducción de la muestra para mejorar la carga computacional.
+
+# Ejercicio 1 (20%)
+
+El objetivo del **análisis de K-means** en este estudio es agrupar a los estudiantes según si padecen depresión o no para identificar estructuras de datos naturales y ver la similitud de las observaciones.
+
+
+Para la representación de estos algoritmos utilizaremos fviz_cluster() una función de visualización de clústeres que muestra gráficamente los grupos formados.
+
+## Se obtine la agrupación mediante k-means con los datos originales y normalizados.
+
+Cargamos los datos y nos quedamos únicamente con los campos que caracterizan a la agrupación que correspondiente. Verificamos que los datos no tengan valores únicos.
+
+```{r message= FALSE, warning=FALSE}
+col_depresion <- studentDepression[c(19)]
+col_data <- studentDepression[c(4,7,9,10,16,17,23,27)]
+
+summary(col_data)
+
+#Tenemos que verificar que las variables no tienen solo un valor unico
+sapply(col_data, function(x) length(unique(x)) == 1)
+
+```
+
+Se han eliminado de este análisis las variables Work.Pressure, Job.Satisfaction e IsStudent, ya que los datos mayoritariamente eran valores de 0 o 1.
+
+### Datos originales
+
+Realizamos la función k-means para los datos sin normalización. Utilizaremos un k = 2. 
+
+```{r message= FALSE, warning=FALSE}
+library(factoextra)
+if (!require('cluster')) install.packages('cluster')
+library(cluster)
+
+# Función para ajustar k-means y mostrar los resultados
+ajustar_kmeans <- function(k, vdata) {
+  fit <- kmeans(vdata, centers = k)
+  return(fit$cluster)
+}
+   
+# Guardar resultado completo del kmeans (no solo los clusters)
+km_res <- kmeans(col_data, centers = 2)
+
+fviz_cluster(km_res, data = col_data, frame.level = 0.68, geom = "point")
+
+
+```
+
+El gráfico muestra un resultado de clustering con una **alta superposición entre los dos grupos**, esto indica que hay una baja capacidad discriminativa del modelo. Aunque se han asignado y hay dos clústeres diferenciados, los límites entre ellos no son totalmente nítidos, sobre todo en el área central. 
+
+K-means no ha logrado capturar una separación coherente entre los grupos de alumnos. La baja diferencia podría deberse a que las variables escogidas no contribuyen a la discriminación de los datos y no ayudan a la clasificación de la depresión.
+
+### Datos normalizados
+
+Para la normalización de los datos, escalaremos los valores escogidos con la función scale. Esta  estandariza los datos y centra cada columna restando la media y divide por la desviación estándar. De esta manera, obtendremos datos más coherentes y preparados para un análisis.
+
+```{r message= FALSE, warning=FALSE}
+library(factoextra)
+
+col_data <- studentDepression[c(4,7,9,10,16,17,23,27)]
+
+# Normalización de los datos
+data_norm <- scale(col_data)
+
+ajustar_kmeans <- function(k, vdata) {
+  fit <- kmeans(vdata, centers = k)
+  return(fit$cluster)
+}
+   
+km_res <- kmeans(data_norm, centers = 2)
+
+fviz_cluster(km_res, data = data_norm, frame.level = 0.68, geom = "point")
+
+```
+
+Al normalizar los datos, podemos ver una mejora en la clasificación de las variables y se observa una separación nítida entre los dos clústeres.
+
+Esto nos indica que la normalización ha permitido al modelo identificar más eficazmente las diferencias estructurales entre los estudiantes con y sin síntomas de depresión.
+
+
+## Se analizan, muestran y comentan las medidas de calidad del modelo generado.
+
+Inicialmente, no conocemos el número óptimo de clústeres (k) para este conjunto de datos. Con la estimación anterior y el conocimiento de los datos sabemos que k=2. Aun así, probaremos con distintos valores del 1 al 3, y se evaluará la calidad del proceso de agrupamiento.
+
+Para ello, vamos a utilizar la silueta de muestra. Es una métrica que nos dice que tan bien están agrupados los datos en un clustering. Mostramos en una gráfica los valores de las siluetas media de cada prueba para comprobar qué número de clústeres es el mejor. Utilizaremos la librería factoextra que nos permitirá visualizar los datos con un tiempo de cómputo menor.
+
+```{r message= FALSE, warning=FALSE}
+# Silhouette method
+
+library(factoextra)
+fviz_nbclust(data_norm, kmeans, method = "silhouette", k.max = 3)
+
+
+```
+
+Como podemos ver: en k = 1 el valor es cercano a 0  porque no hay comparación posible cuando solo hay un clúster. Para k=2 el promedio de Silhouette alcanza su valor máximo con ~0.25. Y con k = 2. El valor promedio de Silhouette disminuye, lo que indica que añadir un tercer clúster empeora la calidad del agrupamiento.
+
+
+## Se comentan los resultados.
+
+La normalización ha mejorado visiblemente la separación en comparación con los datos originales sin escalar. La distribución ahora es más homogénea y los límites de los grupos están mejor definidos, lo que indica que las variables originalmente tenían escalas dispares que interferían en la agrupación.
+
+El análisis de la métrica Silhouette nos ha confirmado que el clúster óptimo es k=2.
+
+# Ejercicio 2 (10%)
+
+## Se obtiene la agrupación k-medians con el número de grupos seleccionado en el ejercicio 1 (de forma opcional también se puede obtener la agrupación mediante el método "around medoids").
+
+PAM (Partitioning Around Medoids) es un algoritmo de clustering similar a k-means, pero usa medoides (observaciones reales) en lugar de promedios como centros.
+Es más robusto frente a valores atípicos y se usa para implementar k-medians o k-medoids.
+
+Realizaremos el algoritmo con la funcion pam() que realiza k-medoids, una alternativa más robusta que k-means.
+
+```{r message= FALSE, warning=FALSE}
+library(cluster)
+library(factoextra)
+library(dplyr)
+
+# Aplicar clustering con el método de k-medians (PAM: Partitioning Around Medoids)
+pam_result <- pam(data_norm, k = 2)
+
+# Visualización del clustering k-medians
+fviz_cluster(pam_result, data = data_norm,
+             palette = "jco", 
+             ellipse.type = "convex",
+             ggtheme = theme_minimal(),
+             main = "Clustering con PAM (k-medians)")
+
+
+
+```
+
+## Se comparan los resultados con los obtenidos en el ejercicio 1.
+
+```{r message= FALSE, warning=FALSE}
+tabla_comparacion <- table(KMeans = km_res$cluster, KMedians = pam_result$clustering)
+print(tabla_comparacion)
+```
+
+Teniendo en cuenta el algoritmo KMeans: Podemos ver que 8247 puntos coinciden con el clúster 1 de K-medians. 1308 puntos están asignados al clúster 2 de K-medians. Pero del clúster 2 de KMeans 65 puntos están en clúster 1 de K-medians y 0 puntos en clúster 2 de K-medians.
+
+Esto nos indica que K-medians y K-means están creando particiones diferentes.
+K-medians agrupa gran parte de lo que K-means llama clúster 2 en su clúster 1, y reparte el clúster 1 de K-means en dos clústeres. Esto se debe a que K-medians es más robusto a valores atípicos y puede formar clústeres que se ajustan mejor a la medida, mientras que el K-means usa valores promedios y es más sensible a valores extremos.
+
+## Se comentan los resultados. 
+
+La tabla muestra la relación entre los clústeres obtenidos por los métodos de agrupamiento KMeans y KMedians. Los valores numéricos representan la cantidad de observaciones que han sido asignadas en cada clúster por ambos métodos.
+
+Esta distribución muestra una discordancia clara en la asignación de clústeres entre los dos métodos. Como sabemos KMeans, está basado en la suma de cuadrados dentro de cada clúster y utilizando la media como centroide, y esto causa que pueda ser más sensible a la forma y distribución de los datos. KMedians, que emplea la mediana para definir los centroides y minimiza la suma de distancias, suele ser más robusto a valores atípicos.
+
+La tabla refleja que, aunque los dos algoritmos detectan una partición similar en términos de número de clústeres y tamaño, la asignación de las observaciones a cada clúster difiere en las etiquetas.
+
+*** 
+
+# Ejercicio 3 (10%)
+
+## Se obtiene la agrupación mediante k-means (con los grupos seleccionados en el ejercicio 1), pero usando una métrica de distancia distinta.
+
+Para esta agrupación utilizaremos la distancia Manhattan. Mide la suma de las diferencias absolutas entre las coordenadas de dos puntos. Es decir, calcula la distancia mediante una cuadrícula, solo líneas rectas, no en diagonal.
+
+```{r message= FALSE, warning=FALSE}
+# Cargar librerías necesarias
+library(factoextra)
+library(cluster)
+library(dplyr)
+
+# Distancia de Manhattan entre las observaciones normalizadas
+dist_manhattan <- dist(data_norm, method = "manhattan")
+
+# Aplicar K-means con distancia Manhattan utilizando el algoritmo clara
+
+clara_result <- clara(data_norm, k = 2, metric = "manhattan", samples = 5)
+
+# Visualización de clusters con distancia Manhattan
+fviz_cluster(clara_result, data = data_norm,
+             palette = "jco",
+             ellipse.type = "convex",
+             ggtheme = theme_minimal(),
+             main = "K-means (CLARA) con distancia Manhattan")
+
+
+```
+
+Aquí se ha aplicado el algoritmo CLARA (Clustering Large Applications) con la métrica de distancia Manhattan.
+
+El gráfico muestra dos clústers claramente diferenciados hacia arriba y hacia abajo, aunque con leve superposición central. Podemos ver que hay una alta densidad de puntos. Esto indica, como ya sabemos, que el conjunto de datos es grande y que justifica el uso del algoritmo CLARA, ya que la métrica Manhattan favorece a agrupaciones robustas frente a outliers.
+
+## Se comparan los resultados con los obtenidos en los ejercicios 1 y 2.
+
+```{r message= FALSE, warning=FALSE}
+
+tabla_comp_manhattan <- table(KMeans = km_res$cluster, KMedians = pam_result$clustering, Manhattan = clara_result$clustering)
+print(tabla_comp_manhattan)
+
+```
+
+En la tabla comparativa podemos ver que K-means y K-medians no coinciden mucho en sus asignaciones con Manhattan = 1. 4333 observaciones fueron asignadas al clúster 1 tanto por KMeans como por KMedians. 527 observaciones coinciden en el clúster 2 en ambos algoritmos. Pero solo 39 observaciones fueron clasificadas como clúster 1 por KMeans pero como clúster 2 por KMedians.
+
+Por otro lado, con Manhattan = 2, la concordancia entre KMeans y KMedians mejora ligeramente, ya que hay menos discrepancias y el número de observaciones en el clúster 2 aumenta, indicando KMedians identifica mejor con esta distancia.
+
+Esto indica que, bajo la configuración de la distancia Manhattan, KMedians reproduce de forma muy parecida la estructura de clústeres identificada por KMeans, aunque con pequeñas diferencias, posiblemente debidas a su mayor robustez ante outliers.
+
+## Se comentan los resultados. 
+
+En conclusión, el análisis de este ejercicio evidencia que la elección de la métrica de distancia es un factor crítico en los algoritmos de agrupamiento. Aparte de la agrupación correcta de los clústeres.
+
+Aunque ambos métodos usan el mismo número de clústeres, están segmentando de forma diferente. K-medians parece tener una preferencia por grupos más compactos y centrados en la mediana, mientras que K-means es más sensible a los valores extremos.
+
+Esta sensibilidad es clave a la hora de evaluar métricas, ya que cada uno capta distintos aspectos de los datos y se pueden extraer conclusiones distintas.
+
+***
+# Ejercicio 4 (10%)
+
+## Se aplica el algoritmo DBSCAN de forma correcta.
+
+Podemos realizar un primer análisis de algoritmo DBSCAN asignando un valor minPts = 100 estimado y un eps_cl = 2. 
+
+```{r message= FALSE, warning=FALSE}
+if (!require('dbscan')) install.packages('dbscan')
+library(dbscan)
+
+res <- optics(data_norm, minPts = 100)
+
+res <- extractDBSCAN(res, eps_cl = 2)
+
+#plot(res) ## negro indica ruido
+
+hullplot(data_norm, res)
+```
+
+Podemos observar en el gráfico que la mayoría de los puntos están agrupados claramente, sin evidencias de datos que puedan considerarse ruido (cruces en negro).
+
+Aun así, es importante ajustar cuidadosamente los parámetros eps y minPts del algoritmo DBSCAN, ya que valores inadecuados pueden ocultar estructuras relevantes o, por el contrario, detectar demasiado ruido. Por ello, vamos a ajustar estos valores.
+
+## Se prueban, describen e interpretan los resultados con diferentes valores de `eps` y `minPts`.
+
+Primeramente, para calcular qué valores son correctos de eps y minPts utilizaremos la función kNNdist() que calcula la distancia desde cada punto a su vecino número k más cercano.
+
+
+```{r message= FALSE, warning=FALSE}
+
+if (!require('dbscan')) install.packages('dbscan')
+library(dbscan)
+
+kNNdist <- kNNdist(data_norm, k = 100)
+plot(sort(kNNdist), type = "l", ylim = c(0, 5), ylab = "100-NN distance")
+abline(h = 2, col = "red")
+```
+
+El gráfico muestra la distancia al 100-ésimo vecino más cercano (100-NN) ordenada ascendentemente para cada una de las 9000 observaciones del conjunto de datos. Esta visualización es útil para seleccionar un valor correcto de eps (radio de vecindad).
+
+La mayoría de los puntos tienen distancias entre 1.0 y 2.5 aproximadamente, lo cual indica que están relativamente cerca de al menos 100 vecinos, lo que sugiere alta densidad local.
+
+Cerca de la observación 9,500, la distancia aumenta representando el umbral que separa puntos densamente conectados de los más aislados.
+
+Este gráfico sugiere que un valor de eps ≈ 2 sería adecuado para capturar estructuras densas sin incorporar demasiado ruido. A su vez, confirma que minPts = 100 es un umbral razonable dada la densidad y tamaño del dataset.
+
+Subiendo la aproximación del valor eps a 2. Realizaremos dos análisis con valores 1.75 y 2.50.
+
+
+```{r message= FALSE, warning=FALSE}
+
+res <- optics(data_norm, minPts = 100)
+
+res <- extractDBSCAN(res, eps_cl = 1.75)
+
+hullplot(data_norm, res)
+```
+
+```{r message= FALSE, warning=FALSE}
+
+res2 <- optics(data_norm, minPts = 100)
+
+res2 <- extractDBSCAN(res2, eps_cl = 2.50)
+
+hullplot(data_norm, res2)
+```
+
+El primer gráfico con valores minPts = 100 y eps_cl = 1.75 aquí se incluyen no solo los puntos clasificados dentro de los clústeres, sino también aquellos puntos que no han sido asigados a ningun clúster indicando ruido. Al visualizar el ruido podemos evaluar cuan de efectivos son los parametros escogidos de eps_cl y minPts, y expresa la complejidad natural de los datos.
+
+En el segundo gráfico contrariamente se muestran unicamente los puntos asignados, omitiendo casi por completo el ruido. Esto nos permite ver los clústeres identificados y poder compararlo con otras clasificaciones.
+
+
+## Se obtiene una medida de ajuste del agrupamiento.
+
+Para este apartado evaluaremos mediante un indicador cuantitativo la calidad de agrupamiento obtenido mediante DBSCAN. Estas medidas permiten valorar qué tan bien separados y definidos los grupos creados por el algoritmo.
+
+En el contexto de clustering, algunas medidas de ajuste son:
+
++ **Índice de Silueta (Silhouette Score):** Mide qué tan similares son los puntos dentro de un mismo clúster, comparado con otros clústeres. Valores cercanos al 1 indican buen agrupamiento.
+
++ **Davies-Bouldin Index:** Evalúa la dispersión dentro de los clústeres y la separación entre ellos. Cuanto menor sea el valor, mejor el agrupamiento.
+
++ **Dunn Index:** Relación entre la distancia mínima entre clústeres y la distancia máxima dentro de un clúster. Valores altos indican buena calidad.
+
+
+**Silhouette Score**
+
+```{r message= FALSE, warning=FALSE}
+library(clusterCrit)
+library(cluster)
+library(fpc)
+library(dbscan)
+
+clusters <- res$cluster
+
+valid_data <- data_norm[clusters != 0, ]
+valid_clusters <- clusters[clusters != 0]
+
+
+
+sil <- silhouette(valid_clusters, dist(valid_data))
+
+mean_silhouette <- mean(sil[, 3])
+print(paste("Silhouette Score:", round(mean_silhouette, 3)))
+
+```
+
+Un valor de 0.248 para Silhouette es moderadamente bajo, lo que indica que los clústeres tienen cierto solapamiento y no están perfectamente separados.
+
+**Davies-Bouldin Index**
+
+```{r message= FALSE, warning=FALSE}
+
+db_index <- intCriteria(traj = as.matrix(valid_data),
+                       part = as.integer(valid_clusters),
+                      crit = "Davies_Bouldin")
+print(paste("Davies-Bouldin Index:", round(db_index$davies_bouldin, 3)))
+
+
+```
+
+Davies-Bouldin Index, sin embargo, obtenemos un valor de 1.364. Esto sugiere que los clústeres están algo separados, pero hay superposición entre ellos.
+
+**Dunn Index**
+
+```{r message= FALSE, warning=FALSE}
+
+ dunn_index <- intCriteria(traj = as.matrix(valid_data),
+                          part = as.integer(valid_clusters),
+                           crit = "Dunn")
+ print(paste("Dunn Index:", round(dunn_index$dunn, 3)))
+
+
+```
+
+Finalmente, Dunn Index tiene un valor 0.398 y es bajo, lo que indica que hay distancias relativamente cortas entre los clústeres.
+
+## Se comparan los resultados obtenidos con los modelos k-means, k-medians y DBSCAN.
+
+```{r message= FALSE, warning=FALSE}
+library(cluster)
+library(dbscan)
+library(clusterCrit)
+
+
+# K-MEANS
+set.seed(123)
+kmeans_clusters <- as.integer(km_res$cluster)
+
+#K-MEDIANS (PAM)
+pam_clusters <- as.integer(pam_result$clustering)
+
+# DBSCAN 
+dbscan_clusters <- as.integer(res$cluster)  # 0 es ruido
+
+
+evaluate_clusters <- function(data, clusters) {
+  valid_idx <- clusters != 0
+  data_valid <- as.matrix(data[valid_idx, ])
+  clusters_valid <- clusters[valid_idx]
+  
+  silhouette_val <- mean(silhouette(clusters_valid, dist(data_valid))[, 3])
+  db_index <- intCriteria(data_valid, clusters_valid, "Davies_Bouldin")$davies_bouldin
+  dunn_index <- intCriteria(data_valid, clusters_valid, "Dunn")$dunn
+
+  return(list(
+    Silhouette = silhouette_val,
+    Davies_Bouldin = db_index,
+    Dunn = dunn_index
+  ))
+}
+
+# Evaluar cada modelo
+eval_kmeans <- evaluate_clusters(data_norm, kmeans_clusters)
+eval_pam <- evaluate_clusters(data_norm, pam_clusters)
+eval_dbscan <- evaluate_clusters(data_norm, dbscan_clusters)
+
+# Mostrar resultados
+results <- data.frame(
+  Modelo = c("K-Means", "K-Medians", "DBSCAN"),
+  Silhouette = c(eval_kmeans$Silhouette, eval_pam$Silhouette, eval_dbscan$Silhouette),
+  Davies_Bouldin = c(eval_kmeans$Davies_Bouldin, eval_pam$Davies_Bouldin, eval_dbscan$Davies_Bouldin),
+  Dunn = c(eval_kmeans$Dunn, eval_pam$Dunn, eval_dbscan$Dunn)
+)
+
+print(results)
+
+```
+
+En los valores de **Silhouette Score**, K-Means obtiene el valor más alto (0.2654), ligeramente superior a K-Medians (0.2607) y a DBSCAN (0.2484). Esto indica que K-Means logra una mejor cohesión interna y separación entre los clústers, aunque las diferencias son pequeñas, lo que sugiere que todos los modelos ofrecen una separación de grupos aceptable pero no ideal.
+
+En el **Davies-Bouldin Index (DBI)**, donde valores más bajos indican mejor separación entre clústers, DBSCAN obtiene el mejor valor (1.3643), lo que sugiere que los clústers generados por este modelo están más claramente separados. K-Means sigue con 1.4545, mientras que K-Medians muestra el valor más alto (1.5101), lo que indica clústers más solapados o menos definidos.
+
+En cuanto al **Dunn Index**, que mide la compacidad interna frente a la separación entre clústers (y donde valores más altos son mejores), DBSCAN sobresale claramente con un valor de 0.3985, evidenciando clústers bien definidos y separados. En contraste, K-Means (0.2752) tiene un valor moderado, mientras que K-Medians tiene un índice muy bajo (0.0389), lo que sugiere que los clústers creados por este modelo están muy dispersos o son poco distinguibles entre sí.
+
+
+## Se comentan los resultados. 
+
+K-Means ofrece el mejor equilibrio en cohesión y separación según el Silhouette Score.
+
+K-Medians, aunque cercano a K-Means en Silhouette, muestra deficiencias claras en los índices de separación (DBI y Dunn), lo que indica clústers menos compactos y mal separados.
+
+DBSCAN, aunque tiene el Silhouette más bajo, logra los mejores valores de separación según DBI y Dunn, lo que sugiere que es más eficaz para detectar estructuras naturales de los datos, especialmente si no son esféricas o contienen ruido.
+
+Por lo tanto, DBSCAN podría ser la mejor opción, a pesar de un Silhouette ligeramente más bajo. Aunque para una estructura más equilibrada y simple, K-Means sigue siendo una opción competitiva.
+
+
+***
+
+# Ejercicio 5 (10%)
+
+## Se seleccionan las muestra de entrenamiento y test.
+
+```{r message= FALSE, warning=FALSE}
+library(caret)
+set.seed(666)
+col_data2 <- studentDepression[c(19)]
+
+data_norm2 <- scale(col_data2)
+
+y <- data_norm2
+X <- data_norm 
+
+split_prop <- 3
+indexes = sample(1:nrow(data_norm), size=floor(((split_prop-1)/split_prop)*nrow(data_norm)))
+
+trainX<-X[indexes,]
+trainy<-y[indexes]
+
+testX<-X[-indexes,]
+
+testy<-y[-indexes]
+
+#Nos aseguramos que las longitudes de ambos valores de test son iguales
+print(nrow(testX))
+print(length(testy))
+
+```
+	
+## Se justifican las proporciones seleccionadas.
+
+Se están dividiendo los datos en subconjuntos de entrenamiento y prueba usando una proporción definida por split_prop <- 3.
+
+Esto significa que los datos se dividen en aproximadamente un 66.67% para entrenamiento y 33.33% para pruebas.
+
+Esta proporción ofrece un buen equilibrio: el conjunto de entrenamiento es lo suficientemente grande como para permitir el aprendizaje de patrones generalizables, mientras que el conjunto de test es representativo para evaluar el rendimiento del modelo.
+
+*** 
+
+# Ejercicio 6 (20%)
+
+## Se entrena el árbol de decisión, se generan reglas y se seleccionan e interpretan las más significativas.
+
+Para el extraer las reglas del árbol de decisión, generaremos el modelo con 3 características principales:
+
++ **minCases** Significa que cada regla o nodo debe cubrir al menos 500 casos.
+
++ **winnow** Sirve para eliminar variables irrelevantes
+
++ **trials** Número de boosting iterations (default 1, para un modelo simple sin boosting, modelo de un solo árbol de decisión)
+
+Esto nos permite establecer un modelo más ajustado, ya que no declaramos ninguna de estas variables, podemos obtener más de 30 reglas para este data set.
+
+```{r message= FALSE, warning=FALSE}
+trainy <-  as.factor(trainy)
+model <- C50::C5.0(trainX, trainy,
+                   rules = TRUE,
+                   trials = 1,
+                   control = C50::C5.0Control(minCases = 500, winnow = TRUE))
+
+summary(model)
+
+```
+
+El árbol obtenido clasifica erroniamente 1614 de 6413 casos, una tasa de error del 25,2%.
+
+Hemos obtenido las siguientes reglas:
+
++ **Regla 1**: Academic.Pressure <= -0.08458227 y Financial.Stress <= -0.7664768 -> Clase negativa (no depresión) con un 79,9% de validez
+
++ **Regla 2**: Academic.Pressure <= -0.7989646 -> Clase negativa (no depresión) con un 74,7% de validez
+
++ **Regla 3**: Academic.Pressure > -0.7989646 y Financial.Stress > -0.7664768 -> Clase positiva (si depresión)  con un 80,6% de validez
+
++ **Regla 4**: Academic.Pressure > -0.08458227 -> Clase positiva (si depresión)  con un 79,3% de validez
+
+*cuando los valores de la clase indican -1.. inican la clase negativa, por tanto 0. Los valores +0... indica la clase positiva por tanto 1*
+
+### Se extraen las reglas del modelo en formato texto y gráfico.
+
+```{r message= FALSE, warning=FALSE}
+library(gridExtra)
+library(grid)  # Necesario para gpar()
+
+model <- C50::C5.0(trainX, trainy,
+                   trials = 1,
+                   control = C50::C5.0Control(minCases = 500, winnow = TRUE))
+plot(model,gp = gpar(fontsize = 5.5))
+
+```
+
+La primera variable utilizada para dividir los datos es Academic.Pressure con un umbral <= -0.799
+Esta división separa a los estudiantes con baja presión académica izquierda de los que tienen mayor presión académica.
+
+Seguidamente se bifurca (dentro del nodo 1 siendo >-0.799) hacia la varia ble Financial.Stress dividida en un umbral de -0.766. Con n = 4348 para >-0.766 el conjunto directo.
+El gráfico de barras muestra que más del 50% están en la clase positiva, lo que podría significar mayor riesgo de depresión.
+
+Finalmente, se clasifica en Academic.Pressure en un umbral de -0.085 clasificando en el nodo5 n = 244 y nodo6 n=660
+
+Este árbol de decisión muestra de forma clara que la presión académica es el principal factor discriminante. El estrés financiero agrava el riesgo cuando la presión académica es alta. Los estudiantes con baja presión académica casi siempre se clasifican como de bajo riesgo.
+Pero cuando el factor académico y financiero son elevados, se observa un aumento del riesgo de padecer depresión.
+
+### Adicionalmente, se genera la matriz de confusión para medir la capacidad predictiva del algoritmo en la muestra de test, teniendo en cuenta las distintas métricas asociadas a dicha matriz (precisión, sensibilidad, especificidad...). Alternativamente, si la variable objeto de estudio es cuantitativa pura se obtienen los criterios de error que nos permitan determinar la capacidad predictiva.
+
+```{r message= FALSE, warning=FALSE}
+
+predicted_model <- predict(model, testX, type = "class")
+print(sprintf("La precisión del árbol es: %.4f %%", 100 * sum(predicted_model == testy) / length(predicted_model)))
+
+
+mat_conf <- table(testy, Predicted = predicted_model)
+print(mat_conf)
+
+porcentaje_correct<-100 * sum(diag(mat_conf)) / sum(mat_conf)
+print(sprintf("El %% de registros correctamente clasificados es: %.4f %%",porcentaje_correct))
+
+```
+El modelo presenta una buena precisión global del 74.18%.
+
+La clase -1.1033 haciendo referencia al grupo no depresión, 1036 veces fue correctamente clasificada y 461 veces fue mal clasificada como la otra clase, creando falsos negativos.
+
+Por otro lado, la clase  0.9061, agrupación no depresivos, 1343 veces fue correctamente clasificada y 367 veces fue mal clasificada como la otra clase.
+
+El porcentaje de registros correctamente clasificados es del 76.8202 %
+
+
+Cuando hablamos de una variable objeto de estudio cuantitativa pura, nos referimos a una variable numérica continua, como por ejemplo: edad, temperatura, etc. No se usan medidas de clasificación como accuracy, precisión, recall o matriz de confusión. En su lugar, se utilizan criterios de error o medidas de desempeño para regresión, como:
+
++ MAE (Mean Absolute Error): Error absoluto medio
+
++ MSE (Mean Squared Error): Error cuadrático medio
+
+ + RMSE (Root Mean Squared Error): Raíz cuadrada del error cuadrático medio
+
++ R² (Coeficiente de determinación): Cuánta variabilidad del target explica el modelo.
+
+En este caso de estudio estamos utilizando una variable binaria categórica. Por ello, no se utilizan los criterios de errores anteriores, sino que se trabaja con métricas de clasificación como la matriz de confusión creada anteriormente.
+
+Para esta variable, aparte de calcular la matriz de confusión, calcularemos la accurancy (mide el porcentaje total de aciertos), la precisión (indica cuántas predicciones positivas fueron correctas), el recall (refleja cuántos casos reales positivos fueron detectados), y el F1 Score (equilibra precisión y recall en una sola métrica)
+
+```{r message= FALSE, warning=FALSE}
+
+# Extraer valores de la matriz de confusión
+TN <- mat_conf[1, 1]
+FP <- mat_conf[1, 2]
+FN <- mat_conf[2, 1]
+TP <- mat_conf[2, 2]
+
+# Calcular métricas
+accuracy  <- (TP + TN) / sum(mat_conf)
+precision <- TP / (TP + FP)
+recall    <- TP / (TP + FN)
+f1_score  <- 2 * ((precision * recall) / (precision + recall))
+
+# Mostrar resultados
+cat("Accuracy :", round(accuracy, 3), "\n")
+cat("Precision:", round(precision, 3), "\n")
+cat("Recall   :", round(recall, 3), "\n")
+cat("F1 Score :", round(f1_score, 3), "\n")
+```
+
+La **accuracy del 76.8%** indica que el modelo acierta en más de tres cuartas partes de los casos totales.
+La **precisión del 79.4%** sugiere que, cuando el modelo predice "depresión", acierta en la mayoría de los casos, minimizando falsos positivos. 
+El **recall del 78.3%** indica que logra identificar correctamente la mayoría de los casos reales de depresión, aunque aún se le escapan algunos (falsos negativos). 
+
+**El F1 Score, que equilibra precisión y recall, se sitúa en 78.9%**.
+
+En conjunto, estas métricas indican que el modelo es fiable para identificar la presencia de depresión.
+
+
+### Se comparan e interpretan los resultados sin y con opciones de poda.
+
+El árbol presentado en el ejercicio anterior tiene una poda basándose en el mínimo de casos para el correcto entendimiento de la clasificación de los datos; se considerará la comparativa sin poda.
+
+En este caso, podemos incluir la confianza para la poda; es un parámetro clave en el algoritmo C5.0 que controla cuánto se poda el árbol de decisión para evitar el sobre ajuste (overfitting). Podemos establecer un valor pequeño de CF como 0.005, ya que queremos más poda.
+
+```{r message= FALSE, warning=FALSE}
+library(gridExtra)
+library(grid)  # Necesario para gpar()
+model <- C50::C5.0(trainX, trainy,
+                   rules = TRUE,
+                   trials = 1,       # No boosting
+                   control = C50::C5.0Control(winnow = TRUE, CF = 0.005))
+summary(model)
+
+model <- C50::C5.0(trainX, trainy,
+                   trials = 1,       # No boosting
+                   control = C50::C5.0Control(winnow = TRUE, CF = 0.005))
+
+plot(model,gp = gpar(fontsize = 5.5))
+
+predicted_model <- predict(model, testX, type = "class")
+print(sprintf("La precisión del árbol es: %.4f %%", 100 * sum(predicted_model == testy) / length(predicted_model)))
+```
+
+Este árbol de decisión más profundo ofrece mucha más segmentación de los perfiles estudiantiles. Las decisiones no se basan únicamente en uno o dos factores principales como el Academic.Pressure, sino en una combinación de estrés académico, financiero, la satisfacción de estudio e incluso la edad.
+
+De este modelo podemos extraer diferentes métricas útiles:
+
+La **métrica usage** está basada en el uso o frecuencia de la variable en las reglas.
+
+```{r message= FALSE, warning=FALSE}
+importancia_usage <- C50::C5imp(model, metric = "usage")
+importancia_usage
+
+```
+
+
+Podemos ver que destaca las variables: Academic.Pressure y Financial.Stress con un 100%. En cambio, obtenemos Age con un 16.44% y Study.Satisfaction y IsBalancedStudent entre el 13-6%.
+
+Por otro lado, tenemos la **métrica splits** que está basada en la cantidad de dimensiones en el árbol que usa la variable; es más concreta en los nodos.
+
+```{r message= FALSE, warning=FALSE}
+importancia_splits <- C50::C5imp(model, metric = "splits")
+importancia_splits
+
+```
+
+En este caso podemos ver que las variables Academic.Pressure y Age están sobre el 27%, Financial.Stress y Study.Satisfaction por el 18%. Finalmente IsBalancedStudent sobre el 9%.
+
+```{r message= FALSE, warning=FALSE}
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+
+df_usage <- as.data.frame(importancia_usage)
+df_usage$variable <- rownames(df_usage)
+df_usage$metric <- "usage"
+
+df_splits <- as.data.frame(importancia_splits)
+df_splits$variable <- rownames(df_splits)
+df_splits$metric <- "splits"
+
+df_importancia <- bind_rows(df_usage, df_splits)
+
+colnames(df_importancia)[1] <- "importance"
+
+ggplot(df_importancia, aes(x = reorder(variable, importance), y = importance, fill = metric)) +
+  geom_col(position = "dodge") +   
+  coord_flip() +  
+  labs(title = "Importancia de las variables en el modelo C5.0",
+       x = "Variable",
+       y = "Importancia",
+       fill = "Métrica") +
+  theme_minimal()
+  
+```
+
+
+### Se comentan los resultados.
+
+El primer árbol de decisión ofrece una visión simplificada del problema, basada únicamente en la presión académica y el estrés financiero. Este enfoque, aunque limitado, es útil para una clasificación rápida y permite clasificar con facilidad a las estudiantes en riesgo mental.
+
+En cambio, el segundo árbol presenta una estructura más compleja. Se incorporan variables adicionales como satisfacción con los estudios y la edad , construye perfiles más específicos y permite distinguir entre diferentes tipos. 
+
+Finalmente, con el análisis de importancia, podemos ver que Academic.Pressure, Age, Financial.Stress y Study.Satisfaction son las variables más importantes y que se tienen en cuenta en ambos árboles.
+
+
+*** 
+
+## Ejercicio 7 (10%)
+
+### Se prueba con otro tipo de árbol de decisión (por ejemplo, un criterio de partición distinto) u otro tipo de algoritmo supervisado.
+
+Nos interesa saber para las predicciones que variable son las que tienen más influencia, por ello utilizaremos el de Random Forest un algoritmo de aprendizaje que combina varios árboles generados con muestras diferentes y selecciona variables de manera aleatoria.
+
+```{r message= FALSE, warning=FALSE}
+library(randomForest)
+if(!require(patchwork)){
+    install.packages('patchwork',repos='http://cran.us.r-project.org')
+    library(patchwork)
+}
+train.data <- data.frame(trainX, default = trainy)
+rf <- randomForest(default ~ ., data = train.data, ntree = 50)
+print(rf)
+
+```
+
+Random Forest consiste en dividir el conjunto de datos en varios pliegues llamados folds para entrenar y evaluar el modelo de forma iterativa, garantizando que cada parte sirva como prueba una vez. Esto permite obtener una estimación más robusta del rendimiento general del modelo, Además, al combinarse con tuning que consiste en encontrar los valores óptimos de los parametros del modelo ayuda a seleccionar los hiperparámetros óptimos.
+
+Con estos dos valores combiandos se puede realizar un modelo más estable y menos propenso a errores cuando trata con nuevos datos.
+
+### Se detalla, comenta y evalúa la calidad de clasificación o del ajuste.
+
+Podemos medir y graficar la importancia de cada variable para las predicciones del random forest con FeatureImp. La medida se basa funciones de pérdida de rendimiento, funciones matematicas que miden cuánto se equivoca un modelo al hacer prediciones.
+
+En este caso será con el objetivo de clasificación de error que evaluará el rendimiento del modelo en tareas de clasificación, indicará qué porcentaje de predicciones fueron incorrectas.
+
+```{r message= FALSE, warning=FALSE}
+library(randomForest)
+if(!require(patchwork)){
+    install.packages('patchwork',repos='http://cran.us.r-project.org')
+    library(patchwork)
+}
+library(iml)
+train.data <- data.frame(trainX, default = trainy)
+
+train.data$amount <- NULL
+train.data$amount_num <- NULL
+
+#Tenemos que poner todo como factor para que no genere problemas
+train.data[] <- lapply(train.data, factor)
+
+#colnames(train.data)[4] <- "default"
+train.data[] <- lapply(train.data, factor)
+sapply(train.data, function(x) if(is.factor(x)) nlevels(x))
+
+#Quitamos los rangos con más de 53 niveles, no son necesarios categorizados
+train.data <- subset(train.data, select = -CGPA)
+train.data[] <- lapply(train.data, factor)
+
+rf <-  randomForest(default ~ ., data = train.data, ntree = 50)
+
+X <- train.data[which(names(train.data) != "default")]
+
+predictor <- Predictor$new(rf, data = X, y = train.data$default) 
+imp <- FeatureImp$new(predictor, loss = "ce")
+plot(imp)
+
+imp$results
+```
+
+Podemos ver que la variable Academic.Pressure tiene un 5.40% de importancia mientras que las variables Financial.Stress, Age y Work.Study.Hours rondan el 3%. Esto sugiere que la variable seleccionadas contribuyen de manera positiva a mejorar la capacidad del modelo para predecir el resultado.
+
+
+### Se comparan los resultados con el método supervisado del ejercicio 6.
+
+Este nivel de error del árbol con 12 reglas (22.9%) es particularmente interesante porque se encuentra muy cerca del error del modelo de Random Forest (23.2%). Esto sugiere que el árbol más desarrollado, con 12 reglas, ha logrado capturar una buena parte de la estructura de los datos.
+
+Si comparamos este árbol con el árbol más simple de 4 reglas, vemos que tiene un error del 25.2%. Aun así, incluso el árbol con 12 reglas, pese a su buen rendimiento relativo, sigue siendo menos robusto que el modelo Random Forest. 
+
+Random Forest, al generar múltiples árboles sobre subconjuntos aleatorios del conjunto de datos, tiene una capacidad de protección frente a los datos sobre ajustados; en cambio, los árboles son más sensibles a las pequeñas variaciones en el conjunto de entrenamiento. 
+
+En conclusión, aunque el árbol con 12 reglas es competitivo en cuanto al porcentaje de error, el Random Forest mantiene una ventaja en cuanto a estabilidad y generalización a nuevos datos.
+
+*** 
+
+## Ejercicio 8 (10%)
+
+### Se identifica qué posibles limitaciones tienen los datos que has seleccionado para obtener conclusiones con los modelos (supervisado y no supervisado)
+
+Los datos utilizados en el análisis provienen de terceros y aparentemente completados por estudiantes universitarios en India, lo cual ya introduce ciertas limitaciones metodológicas importantes. 
+
+Primero, este tipo de fuente es susceptible a sesgos de respuesta, ya que las personas pueden interpretar y contestar las preguntas de forma diferente según su contexto o incluso su disposición en el momento de responder. Variables como “Presión académica” o “Satisfacción con el estudio” son subjetivas aunque estén estandarizadas, lo que genera una gran variabilidad no controlada entre los registros.
+
+Otro problema relevante es la omisión de variables potencialmente explicativas, ya que no se incluyen aspectos como el historial médico, antecedentes de salud mental (más allá de depresión hereditaria), apoyo familiar, o si los estudiantes reciben algún tipo de tratamiento psicológico. Esta omisión puede introducir un sesgo de variables omitidas que afecten la precisión de los modelos predictivos, tanto en enfoques supervisados como no supervisados.
+
+Esto implica, la dificultad de la interpretación y estabilidad de modelos supervisados como árboles de decisión o regresiones. En los modelos no supervisados como clustering, la baja separación entre grupos observada en algunos métodos (como K-means O K-medians) refleja una débil capacidad discriminativa de las variables seleccionadas, lo que limita la utilidad práctica de los clústeres formados.
+
+
+### Se identifican posibles riesgos del uso del modelo y se resumen las principales conclusiones.
+
+El uso de modelos estadísticos para predecir o clasificar condiciones como la depresión estudiantil en mujeres conlleva ciertos riesgos éticos, técnicos y sociales que deben ser abordados con mucha cautela. Uno de los riesgos principales que nos encontramos es la simplificación de un fenómeno clínico complejo como es la depresión. En este caso, la variable "depresión" ha sido tratada como una variable binaria, indicando 1 si se padece 0 si no. Los datos no parten de validación médica, lo que puede llevar a clasificaciones erróneas o malinterpretaciones a niveles clínicos. Esto es especialmente problemático cuando los modelos se utilizan con fines predictivos o de intervención, sin un contexto médico adecuado.
+
+Otro riesgo importante es la posibilidad de generar resultados sesgados. Si los datos utilizados para entrenar los modelos no representan adecuadamente la diversidad de la población estudiantil femenina, los resultados podrían reforzar estereotipos o ignorar situaciones particulares, afectando gravemente a ciertas minorías. Por ejemplo, un modelo que no considera el contexto cultural (como sería en este caso de la India) del estudiante podría interpretar erróneamente ciertos patrones de comportamiento como indicadores de depresión.
+
+En términos técnicos, aunque los modelos supervisados como Random Forest y árboles binarios han mostrado precisiones del 74%, esto no garantiza una generalización inadecuada en otros contextos o poblaciones. Además, se ha identificado que muchas de las variables son interpretables y la mayoría están correlacionadas entre sí, lo que introduce ruido y posibles problemas de sobreajuste (overfitting). Por otro lado, en los modelos no supervisados como K-means, K-medians o DBSCAN, la baja separación entre clústeres indica que los perfiles identificados no son claramente distinguibles, y hace que el modelo sea limitado para la personalización.
+
+Finalmente, podemos decir que el uso de estos modelos podría derivar en decisiones automatizadas sin supervisión humana, lo que aumenta el riesgo. Por eso, es esencial que estos modelos se utilicen únicamente como herramientas exploratorias, complementadas con evaluaciones clínicas si se pretende llevar a estudio.
+
+En conclusión, los modelos ofrecen un valor significativo para detectar patrones. Desde el lado más técnico, podemos ver que las conclusiones extraídas son favorables en contexto, pero su uso debe ser contextualizado y combinado siempre con criterios humanos y éticos.
+
+
+*** 
+

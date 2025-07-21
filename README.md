@@ -4,7 +4,7 @@
 We aim to identify profiles of university students prone to depression using clustering and classification techniques.
 
 ## 📊 Dataset
-- Source: Student depression dataset
+- Source: [Student depression dataset](https://www.kaggle.com/datasets/hopesb/student-depression-dataset)
 - Features: Demographics, academic information, psychological indicators
 - Target: Depression (Binary)
 
